@@ -111,10 +111,10 @@
 <body>
 
 <div class="container">
-    <h2>Revenue Sharing Calculator</h2>
+    <h2>Kalkulator pembagian pendapatan</h2>
     
     <div class="form-group">
-        <label for="pendapatan">Total Revenue (Rp)</label>
+        <label for="pendapatan">Total Pendapatan (Rp)</label>
         <input type="text" id="pendapatan" placeholder="Contoh: 30.000.000" oninput="formatInputRupiah(this)" required>
     </div>
     
@@ -125,11 +125,11 @@
     
     <div class="flex-inputs">
         <div class="form-group">
-            <label for="persenA">Nisbah Party A (%)</label>
+            <label for="persenA">Amir (%)</label>
             <input type="number" id="persenA" value="40" min="0" max="100" oninput="sinkronisasiPersen('A')">
         </div>
         <div class="form-group">
-            <label for="persenB">Nisbah Party B (%)</label>
+            <label for="persenB">Pencucian (%)</label>
             <input type="number" id="persenB" value="60" min="0" max="100" oninput="sinkronisasiPersen('B')">
         </div>
     </div>
@@ -138,27 +138,27 @@
     
     <div class="result-box" id="resultBox">
         <div class="result-item">
-            <span>Net Advantages (Sebelum Pajak):</span>
+            <span>Hasil Kotor (Sebelum Pajak):</span>
             <span id="resSisa">Rp 0</span>
         </div>
         
         <!-- Rincian Pihak A -->
         <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
-            <span>Part of Party A (Kotor):</span>
+            <span>Bagian Amir (Kotor):</span>
             <span id="resAKotor">Rp 0</span>
         </div>
         <div class="result-item tax">
-            <span>Pajak PB1 (10% dari Total Revenue):</span>
+            <span>Pajak PB1 (10% dari Total Pendapatan):</span>
             <span id="resAPajak">-Rp 0</span>
         </div>
         <div class="result-item total" style="color: #16a34a; border-top: none; margin-top: 0; padding-top: 0;">
-            <span>Part of Party A (Bersih Akhir):</span>
+            <span>Bagian Amir (Bersih Akhir):</span>
             <span id="resABersih">Rp 0</span>
         </div>
         
         <!-- Rincian Pihak B -->
         <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
-            <span>Part B (Utuh tanpa Pajak):</span>
+            <span>Pencucian (Utuh tanpa Pajak):</span>
             <span id="resB">Rp 0</span>
         </div>
     </div>

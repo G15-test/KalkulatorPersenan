@@ -97,7 +97,7 @@
         .result-item.tax {
             color: #dc2626;
             font-size: 13px;
-            padding-left: 15px;
+            padding-left: 10px;
             margin-top: -4px;
         }
         .result-item.total {
@@ -115,6 +115,7 @@
     
     <div class="form-group">
         <label for="pendapatan">Total Revenue (Rp)</label>
+        <!-- Mengubah type menjadi text agar bisa disisipkan format ribuan saat diketik -->
         <input type="text" id="pendapatan" placeholder="Contoh: 30.000.000" oninput="formatInputRupiah(this)" required>
     </div>
     
@@ -138,47 +139,49 @@
     
     <div class="result-box" id="resultBox">
         <div class="result-item">
-            <span>Net Advantages (Sebelum Pajak):</span>
+            <span>Net Advantages:</span>
             <span id="resSisa">Rp 0</span>
         </div>
         
-        <!-- Rincian Pihak A -->
-        <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
+        <div class="result-item total">
             <span>Part of Party A (Kotor):</span>
             <span id="resAKotor">Rp 0</span>
         </div>
         <div class="result-item tax">
-            <span>Pajak PB1 (10% dari Total Revenue):</span>
+            <span>Pajak Makanan & Minuman (10%):</span>
             <span id="resAPajak">-Rp 0</span>
         </div>
-        <div class="result-item total" style="color: #16a34a; border-top: none; margin-top: 0; padding-top: 0;">
-            <span>Part of Party A (Bersih Akhir):</span>
+        <div class="result-item total" style="color: #16a34a;">
+            <span>Part of Party A (Bersih):</span>
             <span id="resABersih">Rp 0</span>
         </div>
         
-        <!-- Rincian Pihak B -->
-        <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
-            <span>Part B (Utuh tanpa Pajak):</span>
+        <div class="result-item total">
+            <span>Part B:</span>
             <span id="resB">Rp 0</span>
         </div>
     </div>
 </div>
 
 <script>
+    // Fungsi untuk memformat input secara real-time dengan titik pemisah ribuan
     function formatInputRupiah(input) {
-        let value = input.value.replace(/[^0-9]/g, ''); 
+        let value = input.value.replace(/[^0-9]/g, ''); // Hapus semua karakter non-angka
         if (value === "") {
             input.value = "0";
             return;
         }
+        // Ubah string angka menjadi format ribuan dengan titik
         input.value = new Intl.NumberFormat('id-ID').format(parseInt(value));
     }
 
+    // Fungsi mengambil nilai murni (angka saja) dari input teks yang berformat titik
     function getNilaiMurni(idUmpan) {
         let val = document.getElementById(idUmpan).value;
         return parseFloat(val.replace(/\./g, '')) || 0;
     }
 
+    // Sinkronisasi otomatis persentase agar total tetap 100%
     function sinkronisasiPersen(pihak) {
         const persenA = document.getElementById('persenA');
         const persenB = document.getElementById('persenB');
@@ -192,14 +195,12 @@
         }
     }
 
+    // Format output tampilan angka akhir ke Rupiah standar (Rp XX.XXX.XXX)
     function formatRupiahOutput(angka) {
-        // Mendukung nilai minus jika hasil bersih pihak A di bawah nol
-        if (angka < 0) {
-            return "-Rp " + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Math.abs(angka));
-        }
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
     }
 
+    // Fungsi utama hitung pembagian dan pajak
     function hitungBagiHasil() {
         const pendapatan = getNilaiMurni('pendapatan');
         const pengeluaran = getNilaiMurni('pengeluaran');
@@ -211,22 +212,19 @@
             return;
         }
         
-        // 1. Keuntungan bersih sebelum dipotong pajak
+        // Perhitungan matematika dasar
         const keuntunganBersih = pendapatan - pengeluaran;
-        
-        // 2. Bagi hasil kotor berdasarkan nisbah masing-masing
         const bagianAKotor = keuntunganBersih * (persenA / 100);
         const bagianB = keuntunganBersih * (persenB / 100);
         
-        // 3. Hitung besaran pajak 10% dari TOTAL REVENUE
-        const pajakA = pendapatan * 0.10;
-        
-        // 4. Potong pajak HANYA dari porsi Pihak A
+        // Perhitungan komponen pajak 10% untuk Pihak A
+        const pajakA = bagianAKotor * 0.10;
         const bagianABersih = bagianAKotor - pajakA;
         
+        // Tampilkan kotak ringkasan hasil
         document.getElementById('resultBox').style.display = 'block';
         
-        // Cetak ke layar
+        // Masukkan hasil perhitungan ke elemen antarmuka (UI)
         document.getElementById('resSisa').innerText = formatRupiahOutput(keuntunganBersih);
         document.getElementById('resAKotor').innerText = formatRupiahOutput(bagianAKotor);
         document.getElementById('resAPajak').innerText = "-" + formatRupiahOutput(pajakA);

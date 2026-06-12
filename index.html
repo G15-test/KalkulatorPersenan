@@ -184,7 +184,7 @@
         </div>
     </div>
 
-    <!-- Kotak Peringatan jika Hasil Pihak A Minus -->
+    <!-- Kotak Peringatan -->
     <div class="warning-box" id="warningBox">
         ⚠️ <strong>Peringatan:</strong> Bagian Bersih Pihak A bernilai minus karena potongan pajak lebih besar dari pendapatan nisbahnya!
     </div>
@@ -193,7 +193,6 @@
 </div>
 
 <script>
-    // Menyimpan teks teks global untuk fungsi copy
     let teksHasilWhatsApp = "";
 
     function formatInputRupiah(input) {
@@ -205,8 +204,8 @@
         input.value = new Intl.NumberFormat('id-ID').format(parseInt(value));
     }
 
-    function getNilaiMurni(idUmpan) {
-        let val = document.getElementById(idUmpan).value;
+    function getNilaiMurni(idElement) {
+        let val = document.getElementById(idElement).value;
         return parseFloat(val.replace(/\./g, '')) || 0;
     }
 
@@ -247,30 +246,36 @@
         const pajakA = pendapatan * 0.10;
         const bagianABersih = bagianAKotor - pajakA;
         
-        // Atur tampilan UI Box Hasil dan Button Copy
         document.getElementById('resultBox').style.display = 'block';
         document.getElementById('btnCopy').style.display = 'block';
         
-        // Deteksi nilai minus untuk mengubah warna teks & menampilkan warning
         const boxABersih = document.getElementById('boxABersih');
         const warningBox = document.getElementById('warningBox');
+        
         if (bagianABersih < 0) {
-            boxABersih.style.color = '#dc2626'; // Ubah warna jadi merah jika minus
+            boxABersih.style.color = '#dc2626';
             warningBox.style.display = 'block';
         } else {
             boxABersih.style.color = 'var(--success-color)';
             warningBox.style.display = 'none';
         }
 
-        // Tampilkan data ke layar
         document.getElementById('resSisa').innerText = formatRupiahOutput(keuntunganBersih);
         document.getElementById('resAKotor').innerText = formatRupiahOutput(bagianAKotor);
         document.getElementById('resAPajak').innerText = "-" + formatRupiahOutput(pajakA);
         document.getElementById('resABersih').innerText = formatRupiahOutput(bagianABersih);
         document.getElementById('resB').innerText = formatRupiahOutput(bagianB);
 
-        // Susun teks format WhatsApp (menggunakan format tebal bintang '*')
-        teksHasilWhatsApp = `*Rincian Pembagian Bagi Hasil*\n` +
-                            `------------------------------------------\n` +
-                            `• Total Pendapatan: ${formatRupiahOutput(pendapatan)}\n` +
-                            `• Total Pengeluaran: ${formatRupiahOutput(pengeluaran)}\n` +
+        // Menggunakan standard Template Literals tanpa tanda tambah (+), menghilangkan resiko error interpretasi string
+        teksHasilWhatsApp = `*Rincian Pembagian Bagi Hasil*
+------------------------------------------
+• Total Pendapatan: ${formatRupiahOutput(pendapatan)}
+• Total Pengeluaran: ${formatRupiahOutput(pengeluaran)}
+• Sisa Keuntungan: ${formatRupiahOutput(keuntunganBersih)}
+
+*Pihak A (Nisbah ${persenA}%):*
+  - Bagian Kotor: ${formatRupiahOutput(bagianAKotor)}
+  - Potongan Pajak Resto (10% dari Total): -${formatRupiahOutput(pajakA)}
+  - *Bagian Bersih Akhir: ${formatRupiahOutput(bagianABersih)}*
+
+*Pihak B (Nisbah ${persenB}%):*

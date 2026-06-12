@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revenue Sharing Calculator</title>
+    <title>Kalkulator Bagi Hasil & Pajak</title>
     <style>
         :root {
             --primary-color: #2563eb;
+            --success-color: #16a34a;
+            --wa-color: #25d366;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-color: #1e293b;
@@ -34,6 +36,7 @@
             text-align: center;
             margin-top: 0;
             color: var(--primary-color);
+            font-size: 24px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -66,7 +69,6 @@
         }
         button {
             width: 100%;
-            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 12px;
@@ -74,11 +76,19 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: opacity 0.2s;
             margin-top: 10px;
         }
         button:hover {
-            background-color: #1d4ed8;
+            opacity: 0.9;
+        }
+        .btn-calc {
+            background-color: var(--primary-color);
+        }
+        .btn-copy {
+            background-color: var(--wa-color);
+            display: none;
+            margin-top: 15px;
         }
         .result-box {
             margin-top: 25px;
@@ -97,7 +107,7 @@
         .result-item.tax {
             color: #dc2626;
             font-size: 13px;
-            padding-left: 10px;
+            padding-left: 15px;
             margin-top: -4px;
         }
         .result-item.total {
@@ -106,82 +116,100 @@
             padding-top: 8px;
             margin-top: 8px;
         }
+        .warning-box {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Revenue Sharing Calculator</h2>
+    <h2>Kalkulator Bagi Hasil</h2>
     
     <div class="form-group">
-        <label for="pendapatan">Total Revenue (Rp)</label>
-        <!-- Mengubah type menjadi text agar bisa disisipkan format ribuan saat diketik -->
+        <label for="pendapatan">Total Pendapatan Kotor (Rp)</label>
         <input type="text" id="pendapatan" placeholder="Contoh: 30.000.000" oninput="formatInputRupiah(this)" required>
     </div>
     
     <div class="form-group">
-        <label for="pengeluaran">Total Expenditure/Capital (Rp)</label>
+        <label for="pengeluaran">Total Pengeluaran / Modal (Rp)</label>
         <input type="text" id="pengeluaran" placeholder="Contoh: 0" value="0" oninput="formatInputRupiah(this)">
     </div>
     
     <div class="flex-inputs">
         <div class="form-group">
-            <label for="persenA">Nisbah Party A (%)</label>
+            <label for="persenA">Nisbah Pihak A (%)</label>
             <input type="number" id="persenA" value="40" min="0" max="100" oninput="sinkronisasiPersen('A')">
         </div>
         <div class="form-group">
-            <label for="persenB">Nisbah Party B (%)</label>
+            <label for="persenB">Nisbah Pihak B (%)</label>
             <input type="number" id="persenB" value="60" min="0" max="100" oninput="sinkronisasiPersen('B')">
         </div>
     </div>
     
-    <button onclick="hitungBagiHasil()">Calculate Division</button>
+    <button class="btn-calc" onclick="hitungBagiHasil()">Hitung Pembagian</button>
     
     <div class="result-box" id="resultBox">
         <div class="result-item">
-            <span>Net Advantages:</span>
+            <span>Keuntungan Bersih (Sebelum Pajak):</span>
             <span id="resSisa">Rp 0</span>
         </div>
         
-        <div class="result-item total">
-            <span>Part of Party A (Kotor):</span>
+        <!-- Bagian Pihak A -->
+        <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
+            <span>Bagian Pihak A (Kotor):</span>
             <span id="resAKotor">Rp 0</span>
         </div>
         <div class="result-item tax">
-            <span>Pajak Makanan & Minuman (10%):</span>
+            <span>Pajak Resto (10% dari Total Pendapatan):</span>
             <span id="resAPajak">-Rp 0</span>
         </div>
-        <div class="result-item total" style="color: #16a34a;">
-            <span>Part of Party A (Bersih):</span>
+        <div class="result-item total" id="boxABersih" style="color: var(--success-color); border-top: none; margin-top: 0; padding-top: 0;">
+            <span>Bagian Pihak A (Bersih Akhir):</span>
             <span id="resABersih">Rp 0</span>
         </div>
         
-        <div class="result-item total">
-            <span>Part B:</span>
+        <!-- Bagian Pihak B -->
+        <div class="result-item total" style="border-top: 2px dashed #cbd5e1; margin-top: 15px; padding-top: 10px;">
+            <span>Bagian Pihak B (Utuh):</span>
             <span id="resB">Rp 0</span>
         </div>
     </div>
+
+    <!-- Kotak Peringatan jika Hasil Pihak A Minus -->
+    <div class="warning-box" id="warningBox">
+        ⚠️ <strong>Peringatan:</strong> Bagian Bersih Pihak A bernilai minus karena potongan pajak lebih besar dari pendapatan nisbahnya!
+    </div>
+
+    <button class="btn-copy" id="btnCopy" onclick="salinKeWhatsApp()">📋 Salin Hasil untuk WhatsApp</button>
 </div>
 
 <script>
-    // Fungsi untuk memformat input secara real-time dengan titik pemisah ribuan
+    // Menyimpan teks teks global untuk fungsi copy
+    let teksHasilWhatsApp = "";
+
     function formatInputRupiah(input) {
-        let value = input.value.replace(/[^0-9]/g, ''); // Hapus semua karakter non-angka
+        let value = input.value.replace(/[^0-9]/g, ''); 
         if (value === "") {
             input.value = "0";
             return;
         }
-        // Ubah string angka menjadi format ribuan dengan titik
         input.value = new Intl.NumberFormat('id-ID').format(parseInt(value));
     }
 
-    // Fungsi mengambil nilai murni (angka saja) dari input teks yang berformat titik
     function getNilaiMurni(idUmpan) {
         let val = document.getElementById(idUmpan).value;
         return parseFloat(val.replace(/\./g, '')) || 0;
     }
 
-    // Sinkronisasi otomatis persentase agar total tetap 100%
     function sinkronisasiPersen(pihak) {
         const persenA = document.getElementById('persenA');
         const persenB = document.getElementById('persenB');
@@ -195,12 +223,13 @@
         }
     }
 
-    // Format output tampilan angka akhir ke Rupiah standar (Rp XX.XXX.XXX)
     function formatRupiahOutput(angka) {
+        if (angka < 0) {
+            return "-Rp " + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Math.abs(angka));
+        }
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
     }
 
-    // Fungsi utama hitung pembagian dan pajak
     function hitungBagiHasil() {
         const pendapatan = getNilaiMurni('pendapatan');
         const pengeluaran = getNilaiMurni('pengeluaran');
@@ -208,29 +237,40 @@
         const persenB = parseFloat(document.getElementById('persenB').value || 0);
         
         if (pendapatan <= 0) {
-            alert("Silakan masukkan total revenue terlebih dahulu.");
+            alert("Silakan masukkan total pendapatan kotor terlebih dahulu.");
             return;
         }
         
-        // Perhitungan matematika dasar
         const keuntunganBersih = pendapatan - pengeluaran;
         const bagianAKotor = keuntunganBersih * (persenA / 100);
         const bagianB = keuntunganBersih * (persenB / 100);
-        
-        // Perhitungan komponen pajak 10% untuk Pihak A
-        const pajakA = bagianAKotor * 0.10;
+        const pajakA = pendapatan * 0.10;
         const bagianABersih = bagianAKotor - pajakA;
         
-        // Tampilkan kotak ringkasan hasil
+        // Atur tampilan UI Box Hasil dan Button Copy
         document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('btnCopy').style.display = 'block';
         
-        // Masukkan hasil perhitungan ke elemen antarmuka (UI)
+        // Deteksi nilai minus untuk mengubah warna teks & menampilkan warning
+        const boxABersih = document.getElementById('boxABersih');
+        const warningBox = document.getElementById('warningBox');
+        if (bagianABersih < 0) {
+            boxABersih.style.color = '#dc2626'; // Ubah warna jadi merah jika minus
+            warningBox.style.display = 'block';
+        } else {
+            boxABersih.style.color = 'var(--success-color)';
+            warningBox.style.display = 'none';
+        }
+
+        // Tampilkan data ke layar
         document.getElementById('resSisa').innerText = formatRupiahOutput(keuntunganBersih);
         document.getElementById('resAKotor').innerText = formatRupiahOutput(bagianAKotor);
         document.getElementById('resAPajak').innerText = "-" + formatRupiahOutput(pajakA);
         document.getElementById('resABersih').innerText = formatRupiahOutput(bagianABersih);
         document.getElementById('resB').innerText = formatRupiahOutput(bagianB);
-    }
-</script>
-</body>
-</html>
+
+        // Susun teks format WhatsApp (menggunakan format tebal bintang '*')
+        teksHasilWhatsApp = `*Rincian Pembagian Bagi Hasil*\n` +
+                            `------------------------------------------\n` +
+                            `• Total Pendapatan: ${formatRupiahOutput(pendapatan)}\n` +
+                            `• Total Pengeluaran: ${formatRupiahOutput(pengeluaran)}\n` +

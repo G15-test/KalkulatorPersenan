@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bagi Hasil</title>
+    <title>Revenue Sharing Calculator</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -94,6 +94,12 @@
             margin-bottom: 8px;
             font-size: 15px;
         }
+        .result-item.tax {
+            color: #dc2626;
+            font-size: 13px;
+            padding-left: 10px;
+            margin-top: -4px;
+        }
         .result-item.total {
             font-weight: bold;
             border-top: 1px solid #e2e8f0;
@@ -105,49 +111,77 @@
 <body>
 
 <div class="container">
-    <h2>Kalkulator Bagi Hasil</h2>
+    <h2>Revenue Sharing Calculator</h2>
     
     <div class="form-group">
-        <label for="pendapatan">Total Pendapatan (Rp)</label>
-        <input type="number" id="pendapatan" placeholder="Contoh: 10000000" required>
+        <label for="pendapatan">Total Revenue (Rp)</label>
+        <!-- Mengubah type menjadi text agar bisa disisipkan format ribuan saat diketik -->
+        <input type="text" id="pendapatan" placeholder="Contoh: 30.000.000" oninput="formatInputRupiah(this)" required>
     </div>
     
     <div class="form-group">
-        <label for="pengeluaran">Total Pengeluaran/Modal (Rp)</label>
-        <input type="number" id="pengeluaran" placeholder="Contoh: 4000000" value="0">
+        <label for="pengeluaran">Total Expenditure/Capital (Rp)</label>
+        <input type="text" id="pengeluaran" placeholder="Contoh: 0" value="0" oninput="formatInputRupiah(this)">
     </div>
     
     <div class="flex-inputs">
         <div class="form-group">
-            <label for="persenA">Nisbah Pihak A (%)</label>
-            <input type="number" id="persenA" placeholder="Contoh: 60" value="50" min="0" max="100" oninput="sinkronisasiPersen('A')">
+            <label for="persenA">Nisbah Party A (%)</label>
+            <input type="number" id="persenA" value="40" min="0" max="100" oninput="sinkronisasiPersen('A')">
         </div>
         <div class="form-group">
-            <label for="persenB">Nisbah Pihak B (%)</label>
-            <input type="number" id="persenB" placeholder="Contoh: 40" value="50" min="0" max="100" oninput="sinkronisasiPersen('B')">
+            <label for="persenB">Nisbah Party B (%)</label>
+            <input type="number" id="persenB" value="60" min="0" max="100" oninput="sinkronisasiPersen('B')">
         </div>
     </div>
     
-    <button onclick="hitungBagiHasil()">Hitung Pembagian</button>
+    <button onclick="hitungBagiHasil()">Calculate Division</button>
     
     <div class="result-box" id="resultBox">
         <div class="result-item">
-            <span>Keuntungan Bersih:</span>
+            <span>Net Advantages:</span>
             <span id="resSisa">Rp 0</span>
         </div>
+        
         <div class="result-item total">
-            <span>Bagian Pihak A:</span>
-            <span id="resA">Rp 0</span>
+            <span>Part of Party A (Kotor):</span>
+            <span id="resAKotor">Rp 0</span>
         </div>
+        <div class="result-item tax">
+            <span>Pajak Makanan & Minuman (10%):</span>
+            <span id="resAPajak">-Rp 0</span>
+        </div>
+        <div class="result-item total" style="color: #16a34a;">
+            <span>Part of Party A (Bersih):</span>
+            <span id="resABersih">Rp 0</span>
+        </div>
+        
         <div class="result-item total">
-            <span>Bagian Pihak B:</span>
+            <span>Part B:</span>
             <span id="resB">Rp 0</span>
         </div>
     </div>
 </div>
 
 <script>
-    // Fungsi otomatis agar total persentase Pihak A + Pihak B selalu 100%
+    // Fungsi untuk memformat input secara real-time dengan titik pemisah ribuan
+    function formatInputRupiah(input) {
+        let value = input.value.replace(/[^0-9]/g, ''); // Hapus semua karakter non-angka
+        if (value === "") {
+            input.value = "0";
+            return;
+        }
+        // Ubah string angka menjadi format ribuan dengan titik
+        input.value = new Intl.NumberFormat('id-ID').format(parseInt(value));
+    }
+
+    // Fungsi mengambil nilai murni (angka saja) dari input teks yang berformat titik
+    function getNilaiMurni(idUmpan) {
+        let val = document.getElementById(idUmpan).value;
+        return parseFloat(val.replace(/\./g, '')) || 0;
+    }
+
+    // Sinkronisasi otomatis persentase agar total tetap 100%
     function sinkronisasiPersen(pihak) {
         const persenA = document.getElementById('persenA');
         const persenB = document.getElementById('persenB');
@@ -161,36 +195,41 @@
         }
     }
 
-    // Fungsi format angka ke Rupiah
-    function formatRupiah(angka) {
+    // Format output tampilan angka akhir ke Rupiah standar (Rp XX.XXX.XXX)
+    function formatRupiahOutput(angka) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
     }
 
-    // Fungsi utama perhitungan sesuai rumus
+    // Fungsi utama hitung pembagian dan pajak
     function hitungBagiHasil() {
-        const pendapatan = parseFloat(document.getElementById('pendapatan').value || 0);
-        const pengeluaran = parseFloat(document.getElementById('pengeluaran').value || 0);
+        const pendapatan = getNilaiMurni('pendapatan');
+        const pengeluaran = getNilaiMurni('pengeluaran');
         const persenA = parseFloat(document.getElementById('persenA').value || 0);
         const persenB = parseFloat(document.getElementById('persenB').value || 0);
         
-        // Validasi input dasar
         if (pendapatan <= 0) {
-            alert("Silakan masukkan total pendapatan terlebih dahulu.");
+            alert("Silakan masukkan total revenue terlebih dahulu.");
             return;
         }
         
-        // Eksekusi rumus matematika
+        // Perhitungan matematika dasar
         const keuntunganBersih = pendapatan - pengeluaran;
-        const bagianA = keuntunganBersih * (persenA / 100);
+        const bagianAKotor = keuntunganBersih * (persenA / 100);
         const bagianB = keuntunganBersih * (persenB / 100);
         
-        // Tampilkan box hasil
+        // Perhitungan komponen pajak 10% untuk Pihak A
+        const pajakA = bagianAKotor * 0.10;
+        const bagianABersih = bagianAKotor - pajakA;
+        
+        // Tampilkan kotak ringkasan hasil
         document.getElementById('resultBox').style.display = 'block';
         
-        // Cetak hasil ke layar
-        document.getElementById('resSisa').innerText = formatRupiah(keuntunganBersih);
-        document.getElementById('resA').innerText = formatRupiah(bagianA);
-        document.getElementById('resB').innerText = formatRupiah(bagianB);
+        // Masukkan hasil perhitungan ke elemen antarmuka (UI)
+        document.getElementById('resSisa').innerText = formatRupiahOutput(keuntunganBersih);
+        document.getElementById('resAKotor').innerText = formatRupiahOutput(bagianAKotor);
+        document.getElementById('resAPajak').innerText = "-" + formatRupiahOutput(pajakA);
+        document.getElementById('resABersih').innerText = formatRupiahOutput(bagianABersih);
+        document.getElementById('resB').innerText = formatRupiahOutput(bagianB);
     }
 </script>
 </body>
